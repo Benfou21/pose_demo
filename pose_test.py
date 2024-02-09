@@ -8,7 +8,8 @@ import math
 import time
 import numpy as np
 from transitions import Machine
-
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QImage, QPixmap
 
 from utils_math import calculate_angle
 from utils_math import calculate_dist
@@ -149,42 +150,11 @@ class StateMachine:
 
 
 
-def track(nbRep):
-    cap = cv2.VideoCapture(0)
+def track(frame,nbRep,machine,dict_id,nb,lenght):
     
-    nb = 0
-    text = f'0 / {nbRep}'
-    dict_id = {
-        7 : None,
-        8 : None,
-        21 : None,
-        22 : None,
-        11 : None,
-        13 : None,
-        15 : None,
-        12 : None,
-        14 : None,
-        16 : None,
-    }
-    
-    
-    
-    machine = StateMachine()
-    
-    lenght = None
-   
-
-    while cap.isOpened():
-        
-       
-        
+        text = f"{nb} / {nbRep}"
         # Couleur du cercle en BGR (Bleu, Vert, Rouge)
         colorA1,colorA2 = (255, 0, 0) , (255, 0, 0) # Un cercle bleu
-        ret, frame = cap.read()
-       
-        if not ret:
-            continue
-        
         
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(rgb_frame)
@@ -297,27 +267,17 @@ def track(nbRep):
         
         
         if nb >= nbRep :
-            break
+            return frame ,nb, lenght, "End"
         
         
-        frame_resized = cv2.resize(frame, (frame.shape[1] * 2, frame.shape[0] * 2))
-    
-        cv2.imshow("Pose Tracking", frame_resized)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        frame = cv2.resize(frame, (frame.shape[1] * 2, frame.shape[0] * 2))
 
-    cap.release()
-    cv2.destroyAllWindows()
-   
+        return frame,nb, lenght, "Continue"
+    
+        
+        
+    
     
 
 
-
-def start():
-    # lenght = None
-    # while lenght == None :
-    #     lenght=  calibrate() 
-    
-    track(10)
-    
 

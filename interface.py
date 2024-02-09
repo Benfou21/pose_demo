@@ -1,8 +1,10 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,QComboBox,QLabel
-from pose_test import track
+from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtGui import QImage, QPixmap
 
-
+from pose_test import StateMachine, track
+import cv2 
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -30,17 +32,69 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(self.comboBox)
         layout.addWidget(self.button)
+        layout.addWidget(self.imageLabel)
+
 
         # Configuration du widget central
         centralWidget = QWidget()
         centralWidget.setLayout(layout)
         self.setCentralWidget(centralWidget)
         
+        
         self.cap = None
+        self.machine = StateMachine()  # Initialisez votre machine à états ici
+        self.nbRep = 0
+        self.dict_id = {
+            7 : None,
+            8 : None,
+            21 : None,
+            22 : None,
+            11 : None,
+            13 : None,
+            15 : None,
+            12 : None,
+            14 : None,
+            16 : None,
+        }
+        self.nb = 0
+        self.lenght = None
 
     def onButtonClicked(self):
-        choice = self.comboBox.currentData()  # Récupère la donnée courante sélectionnée dans la comboBox, ici un entier
-        track(choice)
+        
+        self.nbRep = int(self.comboBox.currentText())  # Convertit le texte sélectionné en entier
+        if not self.cap:
+            
+            self.cap = cv2.VideoCapture(0)
+            self.start_track()
+        
+    def start_track(self):
+        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.update_track)
+        self.timer.start(20)
+        
+    def update_track(self):
+        
+        ret, frame = self.cap.read()
+        if ret:
+          
+            frame, self.nb, self.lenght, state = track(frame,self.nbRep,self.machine,self.dict_id,self.nb,self.lenght)
+            
+            if state == "End" :
+                
+                self.timer.stop()
+                self.cap.release()
+                self.cap = None
+                
+            else :
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                height, width, _ = frame.shape
+                bytes_per_line = 3 * width
+                qImg = QImage(frame.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
+                pixmap = QPixmap.fromImage(qImg)
+                self.imageLabel.setPixmap(pixmap.scaled(self.imageLabel.width(), self.imageLabel.height(), Qt.AspectRatioMode.KeepAspectRatio))
+
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
