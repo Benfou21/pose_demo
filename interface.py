@@ -68,10 +68,10 @@ class MainWindow(QMainWindow):
             self.start_track()
         
     def start_track(self):
-        
+        self.nb = 0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_track)
-        self.timer.start(20)
+        self.timer.start(50)
         
     def update_track(self):
         
