@@ -54,14 +54,13 @@ pose = mp_pose.Pose()
 def is_angled(cdt,dict_id):
     
     
-    if(cdt == "a1") :
+    if(cdt == "a1") and dict_id[11] and dict_id[13] and dict_id[15] :
         target = 80
         a1 = dict_id[11]
-        
         a2 = dict_id[13]
         a3 = dict_id[15]
         
-    if(cdt == "a2") :
+    if(cdt == "a2") and dict_id[12] and dict_id[14] and dict_id[16] :
         target = 80
         a1 = dict_id[12]
         a2 = dict_id[14]
@@ -167,6 +166,8 @@ def track(nbRep):
         14 : None,
         16 : None,
     }
+    
+    
     
     machine = StateMachine()
     
@@ -297,8 +298,11 @@ def track(nbRep):
         
         if nb >= nbRep :
             break
-
-        cv2.imshow("Pose Tracking", frame)
+        
+        
+        frame_resized = cv2.resize(frame, (frame.shape[1] * 2, frame.shape[0] * 2))
+    
+        cv2.imshow("Pose Tracking", frame_resized)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

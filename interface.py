@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,QComboBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,QComboBox,QLabel
 from pose_test import track
 
 
@@ -8,7 +8,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Interface OpenCV")
+        self.setWindowTitle("Pose Demo")
+        self.resize(800, 600)
 
         # Création de la liste déroulante (QComboBox)
         self.comboBox = QComboBox()
@@ -20,6 +21,11 @@ class MainWindow(QMainWindow):
         self.button = QPushButton("Lancer OpenCV")
         self.button.clicked.connect(self.onButtonClicked)  # Connecte le bouton à la méthode onButtonClicked
 
+        #Qlabel
+        self.imageLabel = QLabel()
+        self.imageLabel.resize(640,480)
+        
+        
         # Configuration du layout
         layout = QVBoxLayout()
         layout.addWidget(self.comboBox)
@@ -29,6 +35,8 @@ class MainWindow(QMainWindow):
         centralWidget = QWidget()
         centralWidget.setLayout(layout)
         self.setCentralWidget(centralWidget)
+        
+        self.cap = None
 
     def onButtonClicked(self):
         choice = self.comboBox.currentData()  # Récupère la donnée courante sélectionnée dans la comboBox, ici un entier
