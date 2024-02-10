@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,QComboBox,QLabel
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget,QComboBox,QLabel,QGridLayout
 from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QImage, QPixmap, QPainter, QColor, QFont ,QPen
 
@@ -15,7 +15,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Pose Demo")
+        self.setWindowTitle("Démo")
         self.resize(800, 600)
 
         # Création de la liste déroulante (QComboBox)
@@ -26,28 +26,40 @@ class MainWindow(QMainWindow):
             self.comboBox.addItem(str(i), i)
 
         # Création du bouton
-        self.button = QPushButton("Lancer OpenCV")
+        self.button = QPushButton("Lancer")
         self.button.clicked.connect(self.onButtonClicked)  # Connecte le bouton à la méthode onButtonClicked
 
+        #Bouton vidéo
+        self.launchVideoButton = QPushButton("Vidéo démo")
+        self.launchVideoButton.clicked.connect(self.launchVideo)
+       
+        
         #Qlabel
         self.imageLabel = QLabel()
         self.imageLabel.resize(640,480)
         
-        
+        gridLayout = QGridLayout()
+        gridLayout.addWidget(self.imageLabel, 0, 0, 1, 2)  # Row 0, Col 0, Span 1 row, Span 2 cols
+        gridLayout.addWidget(self.comboBox, 1, 0)  # Row 1, Col 0
+        gridLayout.addWidget(self.button, 1, 1)  # Row 1, Col 1
+        gridLayout.addWidget(self.launchVideoButton, 2, 1)  # Row 2, Col 1
+
         # Configuration du layout
-        layout = QVBoxLayout()
-        layout.addWidget(self.comboBox)
-        layout.addWidget(self.button)
-        layout.addWidget(self.imageLabel)
+        # layout = QVBoxLayout()
+        # layout.addWidget(self.comboBox)
+        # layout.addWidget(self.button)
+        # layout.addWidget(self.imageLabel)
+        # layout.addWidget(self.launchVideoButton)
 
 
         # Configuration du widget central
         centralWidget = QWidget()
-        centralWidget.setLayout(layout)
+        centralWidget.setLayout(gridLayout)
         self.setCentralWidget(centralWidget)
         
         
         self.cap = None
+        self.video = None
         self.machine = StateMachine()  # Initialisez votre machine à états ici
         self.nbRep = 0
         self.dict_id = {
@@ -68,24 +80,31 @@ class MainWindow(QMainWindow):
         # self.fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Codec
         # self.out = cv2.VideoWriter('demo.avi', self.fourcc, 20.0, (640, 480))  # Nom de fichier, codec, FPS, résolution
         # Dans __init__ de MainWindow, ajoutez un nouveau bouton pour lancer la vidéo
-        self.launchVideoButton = QPushButton("Lancer la Vidéo")
-        self.launchVideoButton.clicked.connect(self.launchVideo)
-        layout.addWidget(self.launchVideoButton)
         
+
         self.timer = QTimer(self)
 
         
     def onButtonClicked(self):
         
         self.nbRep = int(self.comboBox.currentText())  # Convertit le texte sélectionné en entier
-        if not self.cap:
-            
-            self.cap = cv2.VideoCapture(0)
-            self.start_track()
+        
+        self.start_track()
         
         
         
     def start_track(self):
+        
+        if self.timer.isActive():
+            self.timer.timeout.disconnect()
+            self.timer.stop()
+        if self.cap:
+            self.cap.release()
+        if self.video:
+            self.video.release()
+            self.video = None
+            
+        self.cap = cv2.VideoCapture(0)
         self.nb = 0
         # self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_track)
@@ -95,14 +114,19 @@ class MainWindow(QMainWindow):
         
         # Assurez-vous d'arrêter la capture et le timer actuels s'ils sont en cours
         if self.timer.isActive():
+            self.timer.timeout.disconnect()
             self.timer.stop()
+        if self.video:
+            self.video.release()
         if self.cap:
             self.cap.release()
-        
+            self.cap = None
+            
         # Ouvrir le fichier vidéo
-        self.cap = cv2.VideoCapture('demo.avi')
+        self.video = cv2.VideoCapture('demo.avi')
         
-        if not self.cap.isOpened():
+        
+        if not self.video.isOpened():
             print("Erreur : Impossible d'ouvrir la vidéo.")
             return
         
@@ -113,7 +137,8 @@ class MainWindow(QMainWindow):
     
     
     def updateVideoFrame(self):
-        ret, frame = self.cap.read()
+        ret, frame = self.video.read()
+        
         if ret:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             height, width, _ = frame.shape
@@ -155,7 +180,6 @@ class MainWindow(QMainWindow):
                 #self.out.release() #End recording 
                 self.timer.stop()
                 self.cap.release()
-                self.cap = None
                 self.machine.state = "A"
                 
                 pixmap = QPixmap(self.imageLabel.size())  # Crée un QPixmap de la taille du QLabel
