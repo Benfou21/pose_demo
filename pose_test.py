@@ -60,16 +60,17 @@ def is_angled(cdt,dict_id):
         a1 = dict_id[11]
         a2 = dict_id[13]
         a3 = dict_id[15]
+        return abs(target - calculate_angle(a1,a2,a3)) <= 5 ,  calculate_angle(a1,a2,a3)
         
     if(cdt == "a2") and dict_id[12] and dict_id[14] and dict_id[16] :
         target = 80
         a1 = dict_id[12]
         a2 = dict_id[14]
         a3 = dict_id[16]
+        return abs(target - calculate_angle(a1,a2,a3)) <= 5 ,  calculate_angle(a1,a2,a3)
         
         
-    return abs(target - calculate_angle(a1,a2,a3)) <= 5 ,  calculate_angle(a1,a2,a3)
-    
+    return False,0
     
 
 
@@ -151,6 +152,7 @@ class StateMachine:
 
 
 def track(frame,nbRep,machine,dict_id,nb,lenght):
+    
     
         text = f"{nb} / {nbRep}"
         # Couleur du cercle en BGR (Bleu, Vert, Rouge)
@@ -267,12 +269,12 @@ def track(frame,nbRep,machine,dict_id,nb,lenght):
         
         
         if nb >= nbRep :
-            return frame ,nb, lenght, "End"
+            return frame ,nb, lenght, "End", machine.state
         
         
-        frame = cv2.resize(frame, (frame.shape[1] * 2, frame.shape[0] * 2))
+        frame = cv2.resize(frame, (640, 480))
 
-        return frame,nb, lenght, "Continue"
+        return frame,nb, lenght, "Continue", machine.state
     
         
         
